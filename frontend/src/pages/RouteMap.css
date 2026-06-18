@@ -1,0 +1,574 @@
+.route-map-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Toolbar ──────────────────────────────────────── */
+.rmap-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.rmap-type-btns {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.rmap-type-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  font-size: 0.74rem;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  white-space: nowrap;
+}
+.rmap-type-btn:hover { background: rgba(255,255,255,0.09); color: white; }
+.rmap-type-btn.active { background: rgba(157,78,221,0.22); border-color: var(--primary); color: white; }
+
+/* ── Start / End Trip buttons ─────────────────────── */
+.start-trip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #9d4edd, #e00072);
+  border: none;
+  border-radius: 24px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  letter-spacing: 0.2px;
+  flex-shrink: 0;
+  box-shadow: 0 4px 16px rgba(157,78,221,0.35);
+}
+.start-trip-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(157,78,221,0.5); }
+.start-trip-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; }
+
+.end-trip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 16px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: rgba(239,71,111,0.15);
+  border: 1px solid rgba(239,71,111,0.4);
+  border-radius: 20px;
+  color: #ef476f;
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+.end-trip-btn:hover { background: rgba(239,71,111,0.25); }
+
+/* ── Route info bar ───────────────────────────────── */
+.route-info-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(157,78,221,0.1);
+  border: 1px solid rgba(157,78,221,0.25);
+  border-radius: 12px;
+  padding: 10px 14px;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.ri-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 70px;
+}
+
+.ri-icon { color: var(--primary); flex-shrink: 0; }
+
+.ri-val {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+}
+
+.ri-lbl {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.ri-divider {
+  width: 1px;
+  height: 32px;
+  background: rgba(255,255,255,0.08);
+  margin: 0 8px;
+  flex-shrink: 0;
+}
+
+.reroute-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-left: auto;
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: rgba(157,78,221,0.2);
+  border: 1px solid rgba(157,78,221,0.4);
+  border-radius: 16px;
+  color: #c8b6ff;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+.reroute-btn:hover:not(:disabled) { background: rgba(157,78,221,0.35); }
+.reroute-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Route calculating bar ────────────────────────── */
+.route-calc-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  padding: 6px 10px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* ── Error bar ────────────────────────────────────── */
+.location-error-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(239,71,111,0.1);
+  border: 1px solid rgba(239,71,111,0.3);
+  border-radius: 10px;
+  color: #ef476f;
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+.location-error-bar svg { flex-shrink: 0; }
+.location-error-bar span { flex: 1; }
+.err-close {
+  background: transparent; border: none; color: #ef476f;
+  cursor: pointer; padding: 2px; display: flex; align-items: center;
+  opacity: 0.7; flex-shrink: 0;
+}
+.err-close:hover { opacity: 1; }
+
+/* ── Spinner ──────────────────────────────────────── */
+.btn-spinner {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin-map 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ── Map container ────────────────────────────────── */
+.rmap-container {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(157,78,221,0.22);
+  background: #10091e;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+}
+
+.leaflet-map-el {
+  width: 100%;
+  height: 320px;
+  display: block;
+}
+
+/* ── Loading overlay ──────────────────────────────── */
+.rmap-loading {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  z-index: 900;
+  color: rgba(255,255,255,0.65);
+  font-size: 0.8rem;
+  background: rgba(10,6,22,0.7);
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+}
+
+.rmap-loading-spinner {
+  width: 30px; height: 30px;
+  border: 3px solid rgba(157,78,221,0.25);
+  border-top-color: #9d4edd;
+  border-radius: 50%;
+  animation: spin-map 0.75s linear infinite;
+}
+
+@keyframes spin-map { to { transform: rotate(360deg); } }
+
+/* ── Day tabs ─────────────────────────────────────── */
+.day-tabs {
+  display: flex;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 2px 0 4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.day-tabs::-webkit-scrollbar { display: none; }
+
+.day-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+.day-tab:hover { background: rgba(255,255,255,0.08); color: white; }
+.day-tab.active {
+  background: rgba(157,78,221,0.22);
+  border-color: var(--primary);
+  color: white;
+}
+
+.day-tab-emoji { font-size: 0.85rem; }
+
+/* ── Destination card ─────────────────────────────── */
+.rmap-dest-card {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.dest-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.dest-emoji { font-size: 1.6rem; flex-shrink: 0; }
+
+.dest-meta { flex: 1; min-width: 0; }
+
+.dest-title {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: white;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dest-loc {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.navigate-to-btn {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  background: rgba(157,78,221,0.2);
+  border: 1px solid rgba(157,78,221,0.4);
+  color: #c8b6ff;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.18s ease;
+  flex-shrink: 0;
+}
+.navigate-to-btn:hover:not(:disabled) { background: rgba(157,78,221,0.4); transform: scale(1.1); }
+.navigate-to-btn:disabled { opacity: 0.35; cursor: not-allowed; transform: none; }
+
+/* ── Stops list ───────────────────────────────────── */
+.stops-list {
+  padding: 10px 14px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 260px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(157,78,221,0.3) transparent;
+}
+.stops-list::-webkit-scrollbar { width: 4px; }
+.stops-list::-webkit-scrollbar-thumb { background: rgba(157,78,221,0.3); border-radius: 4px; }
+
+.stops-label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.stops-count { font-weight: 500; text-transform: none; letter-spacing: 0; }
+
+.period-block { display: flex; flex-direction: column; gap: 4px; }
+
+.period-block-header {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 3px 0 2px;
+}
+
+.stop-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  background: rgba(0,0,0,0.15);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+}
+.stop-item:hover {
+  background: rgba(157,78,221,0.1);
+  border-color: rgba(157,78,221,0.2);
+}
+
+.stop-num {
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: rgba(157,78,221,0.25);
+  border: 1.5px solid rgba(157,78,221,0.5);
+  color: #c8b6ff;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+
+.stop-content { flex: 1; min-width: 0; }
+
+.stop-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: white;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stop-time {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+.stop-pin-icon { color: var(--text-muted); flex-shrink: 0; opacity: 0.5; }
+
+.no-stops-hint {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 14px;
+  font-style: italic;
+}
+
+/* ── Legend ───────────────────────────────────────── */
+.rmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 2px 2px 0;
+}
+.rmap-legend-item {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 0.7rem; color: var(--text-muted);
+}
+.legend-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.gps-pulse-tiny {
+  background: #06d6a0;
+  animation: gps-blink 1.2s ease-in-out infinite;
+}
+
+/* ── GPS Marker ───────────────────────────────────── */
+.gps-icon-container { background: transparent !important; border: none !important; }
+
+.gps-outer-ring {
+  width: 44px; height: 44px;
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.gps-inner-ring {
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(6,214,160,0.45);
+  animation: gps-pulse 1.6s ease-out infinite;
+}
+.gps-inner-ring::after {
+  content: '';
+  position: absolute; inset: -10px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(6,214,160,0.2);
+  animation: gps-pulse 1.6s ease-out 0.5s infinite;
+}
+.gps-dot-center {
+  width: 16px; height: 16px;
+  border-radius: 50%;
+  background: #06d6a0;
+  border: 2.5px solid white;
+  box-shadow: 0 0 14px rgba(6,214,160,0.8), 0 0 28px rgba(6,214,160,0.3);
+  z-index: 1;
+}
+
+@keyframes gps-pulse { 0% { transform: scale(1); opacity: 0.9; } 100% { transform: scale(2.5); opacity: 0; } }
+@keyframes gps-blink { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.75); } }
+
+/* ── Day Markers ──────────────────────────────────── */
+.day-marker-icon { background: transparent !important; border: none !important; }
+
+.day-pin {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: #9d4edd;
+  border: 2px solid rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  position: relative;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.4);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.day-pin:hover { transform: scale(1.12); box-shadow: 0 5px 18px rgba(0,0,0,0.5); }
+
+.day-pin-active {
+  background: #e00072 !important;
+  transform: scale(1.18);
+  border-color: rgba(255,255,255,0.35);
+  box-shadow: 0 0 0 3px rgba(224,0,114,0.3), 0 5px 18px rgba(224,0,114,0.4) !important;
+}
+
+.day-pin-num {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: white;
+  font-family: inherit;
+  line-height: 1;
+}
+
+.day-pin-pulse {
+  position: absolute; inset: -7px;
+  border-radius: 50%;
+  border: 2px solid rgba(224,0,114,0.5);
+  animation: pin-pulse 1.4s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes pin-pulse { 0% { transform:scale(1); opacity:0.8; } 100% { transform:scale(1.7); opacity:0; } }
+
+/* ── Route line animation ─────────────────────────── */
+.route-line-anim path {
+  stroke-dasharray: 2000;
+  stroke-dashoffset: 2000;
+  animation: route-draw 1.4s ease-out forwards;
+}
+@keyframes route-draw { to { stroke-dashoffset: 0; } }
+
+/* ── Leaflet overrides ────────────────────────────── */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.5) !important;
+  margin-bottom: 8px !important;
+  margin-right: 8px !important;
+}
+.leaflet-control-zoom a {
+  background: rgba(15,8,30,0.92) !important;
+  color: white !important;
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  width: 28px !important; height: 28px !important;
+  line-height: 28px !important; font-size: 1rem !important;
+}
+.leaflet-control-zoom a:hover { background: rgba(157,78,221,0.35) !important; }
+
+.leaflet-control-attribution {
+  background: rgba(0,0,0,0.55) !important;
+  color: rgba(255,255,255,0.35) !important;
+  font-size: 0.58rem !important;
+}
+.leaflet-control-attribution a { color: rgba(255,255,255,0.45) !important; }
+
+/* Popup */
+.leaflet-popup-content-wrapper {
+  background: rgba(15,8,30,0.97) !important;
+  border: 1px solid rgba(157,78,221,0.35) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important;
+  padding: 0 !important;
+}
+.leaflet-popup-tip { background: rgba(15,8,30,0.97) !important; }
+.leaflet-popup-content { margin: 0 !important; padding: 0 !important; }
+
+.rp-inner { padding: 11px 14px; min-width: 140px; }
+.rp-day { font-size: 0.62rem; font-weight: 700; color: #9d4edd; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+.rp-title { font-size: 0.85rem; font-weight: 700; color: white; line-height: 1.3; }
+
+/* ── Responsive ───────────────────────────────────── */
+@media (max-width: 600px) {
+  .leaflet-map-el { height: 240px; }
+  .route-info-bar { gap: 6px; padding: 8px 10px; }
+  .ri-item { min-width: 54px; }
+  .ri-val { font-size: 0.82rem; }
+  .rmap-type-btn span { display: none; }
+  .rmap-type-btn { padding: 5px 8px; }
+  .day-tab { padding: 4px 9px; font-size: 0.7rem; }
+  .stops-list { max-height: 180px; }
+  .ri-divider { margin: 0 4px; }
+  .start-trip-btn { padding: 7px 13px; font-size: 0.78rem; }
+}
+
+@media (max-width: 400px) {
+  .rmap-toolbar { gap: 5px; }
+  .leaflet-map-el { height: 200px; }
+}
