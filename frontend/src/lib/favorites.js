@@ -92,7 +92,7 @@ export async function saveTrip({ title, destination, source, days, tripId, total
     .from('favorites')
     .insert({
       user_id: user.id,
-      type: 'trip',
+      type: 'destination',
       title: title || `${destination} — ${days}-Day Trip`,
       location: source ? `${source} → ${destination}` : destination,
       image_url: '✈️',

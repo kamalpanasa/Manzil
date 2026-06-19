@@ -353,7 +353,12 @@ const Itinerary = () => {
               <Download size={14} /> Export
             </button>
           )}
-          <button className="btn-outline print-btn" onClick={() => window.print()}>Print</button>
+          <button className="btn-outline print-btn" onClick={() => {
+    const allExpanded = {};
+    itinerary.forEach(item => { allExpanded[item.id] = true; });
+    setExpandedDays(allExpanded);
+    setTimeout(() => window.print(), 300);
+  }}>Print</button>
         </div>
       </div>
 
@@ -707,6 +712,7 @@ const Itinerary = () => {
                 setActiveDayIdx={setActiveDayIdx}
                 currencySymbol={currencySymbol}
                 convertFromINR={convertFromINR}
+                destination={trip?.destination || ''}
               />
             </div>
 

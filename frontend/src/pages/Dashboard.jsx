@@ -28,14 +28,14 @@ const TRENDING = [
   { name: 'Manali', image: '/manali.png', type: 'Mountains', rating: 4.9, price: '₹12k', days: '4-6', country: 'India' },
   { name: 'Kerala', image: '/kerala.png', type: 'Nature', rating: 4.7, price: '₹18k', days: '5-7', country: 'India' },
   { name: 'Jaipur', image: '/jaipur.png', type: 'Heritage', rating: 4.6, price: '₹10k', days: '3-4', country: 'India' },
-  { name: 'Bali', image: '/bali.png', type: 'Beach', rating: 4.9, price: '₹45k', days: '5-7', country: 'Indonesia' },
-  { name: 'Bangkok', image: '/bangkok.png', type: 'City', rating: 4.7, price: '₹30k', days: '4-6', country: 'Thailand' },
-  { name: 'Dubai', image: '/dubai.png', type: 'Luxury', rating: 4.8, price: '₹80k', days: '4-5', country: 'UAE' },
-  { name: 'Paris', image: '/paris.png', type: 'Romance', rating: 4.9, price: '₹1.2L', days: '5-7', country: 'France' },
-  { name: 'Tokyo', image: '/tokyo.png', type: 'Culture', rating: 4.9, price: '₹90k', days: '7-10', country: 'Japan' },
-  { name: 'Singapore', image: '/singapore.png', type: 'City', rating: 4.8, price: '₹55k', days: '3-5', country: 'Singapore' },
-  { name: 'Agra', image: '/agra.png', type: 'Heritage', rating: 4.5, price: '₹8k', days: '1-2', country: 'India' },
-  { name: 'Shimla', image: '/shimla.png', type: 'Mountains', rating: 4.6, price: '₹10k', days: '3-4', country: 'India' },
+  { name: 'Bali', image: 'https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=480&q=80', type: 'Beach', rating: 4.9, price: '₹45k', days: '5-7', country: 'Indonesia' },
+  { name: 'Bangkok', image: 'https://images.unsplash.com/photo-1508009603885-50cf7c579365?w=480&q=80', type: 'City', rating: 4.7, price: '₹30k', days: '4-6', country: 'Thailand' },
+  { name: 'Dubai', image: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=480&q=80', type: 'Luxury', rating: 4.8, price: '₹80k', days: '4-5', country: 'UAE' },
+  { name: 'Paris', image: 'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=480&q=80', type: 'Romance', rating: 4.9, price: '₹1.2L', days: '5-7', country: 'France' },
+  { name: 'Tokyo', image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=480&q=80', type: 'Culture', rating: 4.9, price: '₹90k', days: '7-10', country: 'Japan' },
+  { name: 'Singapore', image: 'https://images.unsplash.com/photo-1525625293386-3f8f99389edd?w=480&q=80', type: 'City', rating: 4.8, price: '₹55k', days: '3-5', country: 'Singapore' },
+  { name: 'Agra', image: 'https://images.unsplash.com/photo-1564507592333-c60657eea523?w=480&q=80', type: 'Heritage', rating: 4.5, price: '₹8k', days: '1-2', country: 'India' },
+  { name: 'Shimla', image: 'https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?w=480&q=80', type: 'Mountains', rating: 4.6, price: '₹10k', days: '3-4', country: 'India' },
 ];
 
 const Dashboard = () => {

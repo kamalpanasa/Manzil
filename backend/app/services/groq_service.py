@@ -132,7 +132,9 @@ def _build_user_prompt(
         "5. Lunch (Afternoon) and Dinner (Night) food stops are MANDATORY each day — use real restaurant/dhaba/stall names.\n"
         "6. 'estimated_cost' per day = accommodation + food + transport + all activity costs combined (realistic total).\n"
         "7. Activity 'cost' must respect the per-activity budget ceiling specified above.\n"
-        "8. Include travel tips in activity descriptions (best entry time, what to wear, what to order, etc.).\n\n"
+        "8. Include travel tips in activity descriptions (best entry time, what to wear, what to order, etc.).\n"
+        f"9. The 'location' field for EVERY day MUST include the area/neighbourhood AND the city AND country, e.g. 'Covent Garden, {destination}, UK' or 'Hyde Park, {destination}, UK'. NEVER use a bare neighbourhood name — always append the destination city and country.\n"
+        f"10. ALL activities and locations MUST be physically inside {destination}. Do NOT suggest places in other cities, countries, or continents under any circumstances.\n\n"
         "Return ONLY a JSON object with exactly this shape:\n"
         "{\n"
         '  "categories": ["Category 1", "Category 2", "Category 3"],\n'

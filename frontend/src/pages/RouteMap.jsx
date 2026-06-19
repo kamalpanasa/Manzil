@@ -339,25 +339,56 @@ const lookupCoord = (location) => {
   return null;
 };
 
-const geocodeLocation = async (location) => {
+const geocodeLocation = async (location, destinationHint) => {
   const known = lookupCoord(location);
   if (known) return known;
-  try {
-    const q = encodeURIComponent(location);
+
+  const destCoord = destinationHint ? lookupCoord(destinationHint) : null;
+
+  const tryNominatim = async (query) => {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=3`,
       { headers: { 'Accept-Language': 'en', 'User-Agent': 'ManzilTravelApp/1.0' } }
     );
-    const data = await res.json();
+    return res.json();
+  };
+
+  const pickBestResult = (results) => {
+    if (!results || !results.length) return null;
+    if (!destCoord) return [parseFloat(results[0].lat), parseFloat(results[0].lon)];
+    let best = null, bestDist = Infinity;
+    for (const r of results) {
+      const lat = parseFloat(r.lat), lon = parseFloat(r.lon);
+      const dLat = lat - destCoord[0], dLon = lon - destCoord[1];
+      const dist = Math.sqrt(dLat * dLat + dLon * dLon);
+      if (dist < bestDist) { bestDist = dist; best = [lat, lon]; }
+    }
+    return bestDist < 15 ? best : null;
+  };
+
+  try {
+    const data = await tryNominatim(location);
+    const coord = pickBestResult(data);
+    if (coord) return coord;
+
+    if (destinationHint) {
+      const withCity = `${location}, ${destinationHint}`;
+      const data2 = await tryNominatim(withCity);
+      const coord2 = pickBestResult(data2);
+      if (coord2) return coord2;
+      if (data2 && data2[0]) return [parseFloat(data2[0].lat), parseFloat(data2[0].lon)];
+    }
+
     if (data && data[0]) return [parseFloat(data[0].lat), parseFloat(data[0].lon)];
   } catch {}
-  return [20.0, 0.0];
+
+  return destCoord || [20.0, 0.0];
 };
 
 const fetchOSRMRoute = async (waypoints) => {
   const coordStr = waypoints.map(([lat, lng]) => `${lng.toFixed(6)},${lat.toFixed(6)}`).join(';');
   const url = `https://router.project-osrm.org/route/v1/driving/${coordStr}?overview=full&geometries=geojson&steps=false`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(12000) });
+  const res = await fetch(url, { signal: AbortSignal.timeout(10000) });
   if (!res.ok) throw new Error('OSRM request failed');
   const data = await res.json();
   if (data.code !== 'Ok' || !data.routes?.length) throw new Error('No route found');
@@ -366,7 +397,17 @@ const fetchOSRMRoute = async (waypoints) => {
     geometry: route.geometry,
     distance: (route.distance / 1000).toFixed(1),
     duration: Math.round(route.duration / 60),
+    isFlight: false,
   };
+};
+
+const haversineKm = ([lat1, lng1], [lat2, lng2]) => {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))).toFixed(0);
 };
 
 const clearLayers = (ref) => {
@@ -379,7 +420,7 @@ const clearLayers = (ref) => {
   ref.current = null;
 };
 
-const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx }) => {
+const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx, destination }) => {
   const wrapRef = useRef(null);
   const mapDivRef = useRef(null);
   const lMapRef = useRef(null);
@@ -416,7 +457,7 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx }) => {
       for (const item of itinerary) {
         const loc = item.location || item.title;
         if (!coordsCacheRef.current[loc]) {
-          coordsCacheRef.current[loc] = await geocodeLocation(loc);
+          coordsCacheRef.current[loc] = await geocodeLocation(loc, destination);
           await new Promise(r => setTimeout(r, 280));
         }
         results.push({ coord: coordsCacheRef.current[loc], item });
@@ -488,6 +529,41 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx }) => {
     if (coord) lMapRef.current.panTo(coord, { animate: true, duration: 0.5 });
   }, [selectedDayIdx, coordsList, buildDayMarkers]);
 
+  const drawStraightFallback = useCallback((from, dest) => {
+    const distKm = haversineKm(from, dest);
+    const isLongHaul = Number(distKm) > 500;
+
+    const shadow = L.polyline([from, dest], {
+      color: 'rgba(157,78,221,0.18)', weight: 14, lineCap: 'round',
+    }).addTo(lMapRef.current);
+
+    const line = L.polyline([from, dest], {
+      color: '#9d4edd', weight: 3, opacity: 0.85,
+      dashArray: isLongHaul ? '12 8' : '8 6',
+      lineCap: 'round',
+    }).addTo(lMapRef.current);
+
+    const midLat = (from[0] + dest[0]) / 2;
+    const midLng = (from[1] + dest[1]) / 2;
+    const modeEmoji = isLongHaul ? '✈️' : '🚗';
+    const midIcon = L.divIcon({
+      html: `<div style="font-size:22px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));cursor:default;">${modeEmoji}</div>`,
+      className: '',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    });
+    const midMarker = L.marker([midLat, midLng], { icon: midIcon, interactive: false })
+      .addTo(lMapRef.current);
+
+    routeLayersRef.current = [shadow, line, midMarker];
+
+    try {
+      lMapRef.current.fitBounds(line.getBounds(), { padding: [70, 70] });
+    } catch {}
+
+    setRouteInfo({ distance: distKm, duration: null, isFlight: isLongHaul });
+  }, []);
+
   const drawRoute = useCallback(async (from, destIdx) => {
     if (!lMapRef.current || !coordsList[destIdx]) return;
     setRouteLoading(true);
@@ -495,8 +571,9 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx }) => {
     setLocationError('');
     clearLayers(routeLayersRef);
 
+    const dest = coordsList[destIdx].coord;
+
     try {
-      const dest = coordsList[destIdx].coord;
       const result = await fetchOSRMRoute([from, dest]);
 
       const shadow = L.geoJSON(result.geometry, {
@@ -515,18 +592,15 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx }) => {
       routeLayersRef.current = [shadow, glow, main];
 
       const bounds = main.getBounds();
-      if (bounds.isValid()) {
-        lMapRef.current.fitBounds(bounds, { padding: [60, 60] });
-      }
+      if (bounds.isValid()) lMapRef.current.fitBounds(bounds, { padding: [60, 60] });
 
-      setRouteInfo({ distance: result.distance, duration: result.duration });
-    } catch (err) {
-      console.warn('OSRM routing failed:', err.message);
-      setLocationError('Could not calculate route. The OSRM service may be temporarily unavailable.');
+      setRouteInfo({ distance: result.distance, duration: result.duration, isFlight: false });
+    } catch {
+      drawStraightFallback(from, dest);
     } finally {
       setRouteLoading(false);
     }
-  }, [coordsList]);
+  }, [coordsList, drawStraightFallback]);
 
   useEffect(() => {
     if (isNavigating && userPos && coordsList.length) {
@@ -648,17 +722,27 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx }) => {
             <Ruler size={15} className="ri-icon" />
             <div>
               <div className="ri-val">{routeInfo.distance} km</div>
-              <div className="ri-lbl">Distance</div>
+              <div className="ri-lbl">{routeInfo.isFlight ? 'Air Distance' : 'Distance'}</div>
             </div>
           </div>
           <div className="ri-divider" />
-          <div className="ri-item">
-            <Clock size={15} className="ri-icon" />
-            <div>
-              <div className="ri-val">{routeInfo.duration} min</div>
-              <div className="ri-lbl">ETA</div>
+          {routeInfo.isFlight ? (
+            <div className="ri-item">
+              <span style={{ fontSize: '18px', lineHeight: 1 }}>✈️</span>
+              <div>
+                <div className="ri-val" style={{ fontSize: '0.78rem' }}>Flight Route</div>
+                <div className="ri-lbl">Road n/a</div>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="ri-item">
+              <Clock size={15} className="ri-icon" />
+              <div>
+                <div className="ri-val">{routeInfo.duration} min</div>
+                <div className="ri-lbl">Drive ETA</div>
+              </div>
+            </div>
+          )}
           <div className="ri-divider" />
           <div className="ri-item">
             <Navigation2 size={15} className="ri-icon" />

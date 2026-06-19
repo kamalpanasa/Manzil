@@ -2,22 +2,60 @@ import { supabase } from './supabaseClient';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
+async function forceSignOut() {
+  try { await supabase.auth.signOut(); } catch {}
+}
+
+async function getValidSession() {
+  let { data: { session } } = await supabase.auth.getSession();
+
+  if (!session) return null;
+
+  const expiresAt = session.expires_at;
+  const nowSecs = Math.floor(Date.now() / 1000);
+  const isExpiredOrClose = !expiresAt || expiresAt - nowSecs < 60;
+
+  if (isExpiredOrClose) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (!error && refreshed.session) return refreshed.session;
+    await forceSignOut();
+    return null;
+  }
+
+  return session;
+}
+
+async function doFetch(path, token, method, body, extraHeaders) {
+  return fetch(`${API_BASE_URL}${path}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+      ...extraHeaders,
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+}
+
 async function request(path, { method = 'GET', body, extraHeaders = {} } = {}) {
-  const { data: { session } } = await supabase.auth.getSession();
+  let session = await getValidSession();
 
   if (!session) {
     throw new Error('You must be logged in to do that.');
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method,
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session.access_token}`,
-      ...extraHeaders,
-    },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+  let response = await doFetch(path, session.access_token, method, body, extraHeaders);
+
+  if (response.status === 401) {
+    const { data: refreshed, error } = await supabase.auth.refreshSession();
+    if (!error && refreshed.session) {
+      session = refreshed.session;
+      response = await doFetch(path, session.access_token, method, body, extraHeaders);
+    } else {
+      await forceSignOut();
+      throw new Error('Your session has expired. Please log in again.');
+    }
+  }
 
   if (!response.ok) {
     let detail = `Request failed with status ${response.status}`;
@@ -54,9 +92,14 @@ export function getChatHistory() {
 }
 
 export function sendChatMessage(message) {
+  const extraHeaders = {};
+  const groqKey = localStorage.getItem('manzil_groq_key');
+  if (groqKey) extraHeaders['X-Groq-Key'] = groqKey;
+
   return request('/api/chat/send', {
     method: 'POST',
     body: { message },
+    extraHeaders,
   });
 }
 
