@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 
 from groq import Groq
 
@@ -57,7 +57,7 @@ def _save_message(user_id: str, role: str, content: str) -> Dict:
     return result.data[0]
 
 
-def send_message(user_id: str, message: str) -> Dict:
+def send_message(user_id: str, message: str, groq_key: Optional[str] = None) -> Dict:
     """
     Saves the user's message, asks Groq for a reply using recent
     conversation history as context, saves that reply, and returns it.
@@ -97,7 +97,8 @@ def send_message(user_id: str, message: str) -> Dict:
     for m in recent:
         groq_messages.append({"role": m["role"], "content": m["content"]})
 
-    completion = _client.chat.completions.create(
+    client = Groq(api_key=groq_key) if groq_key else _client
+    completion = client.chat.completions.create(
         model=settings.GROQ_MODEL,
         messages=groq_messages,
         temperature=0.7,
