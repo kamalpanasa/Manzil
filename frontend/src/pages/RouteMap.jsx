@@ -427,6 +427,7 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx, destination }) => 
   const tileRef = useRef(null);
   const dayMarkersRef = useRef([]);
   const routeLayersRef = useRef(null);
+  const journeyLayersRef = useRef([]);
   const userMarkerRef = useRef(null);
   const coordsCacheRef = useRef({});
 
@@ -526,8 +527,85 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx, destination }) => 
     if (!lMapRef.current || !coordsList.length) return;
     buildDayMarkers(lMapRef.current, coordsList, selectedDayIdx);
     const coord = coordsList[selectedDayIdx]?.coord;
-    if (coord) lMapRef.current.panTo(coord, { animate: true, duration: 0.5 });
+    if (coord) {
+      lMapRef.current.flyTo(coord, 13, { animate: true, duration: 0.9 });
+    }
   }, [selectedDayIdx, coordsList, buildDayMarkers]);
+
+  const handlePrevDay = () => {
+    if (selectedDayIdx <= 0) return;
+    const idx = selectedDayIdx - 1;
+    setSelectedDayIdx(idx);
+    setActiveDayIdx(idx);
+  };
+
+  const handleNextDay = () => {
+    if (selectedDayIdx >= coordsList.length - 1) return;
+    const idx = selectedDayIdx + 1;
+    setSelectedDayIdx(idx);
+    setActiveDayIdx(idx);
+  };
+
+  const handleViewAll = () => {
+    if (!lMapRef.current || !coordsList.length) return;
+    const latLngs = coordsList.map(c => c.coord);
+    if (latLngs.length === 1) lMapRef.current.flyTo(latLngs[0], 11, { animate: true });
+    else { try { lMapRef.current.flyToBounds(latLngs, { padding: [60, 60], maxZoom: 11, animate: true, duration: 1 }); } catch {} }
+  };
+
+  const drawJourney = useCallback(async () => {
+    if (!lMapRef.current || coordsList.length < 2) return;
+
+    journeyLayersRef.current.forEach(l => { try { l.remove(); } catch {} });
+    journeyLayersRef.current = [];
+
+    const coords = coordsList.map(c => c.coord);
+    const newLayers = [];
+
+    for (let i = 0; i < coords.length - 1; i++) {
+      if (!lMapRef.current) return;
+      const from = coords[i];
+      const to = coords[i + 1];
+      const distKm = Number(haversineKm(from, to));
+      let drew = false;
+
+      if (distKm < 600) {
+        try {
+          const result = await fetchOSRMRoute([from, to]);
+          if (!lMapRef.current) return;
+          const shadow = L.geoJSON(result.geometry, {
+            style: { color: 'rgba(124,58,237,0.15)', weight: 10, lineCap: 'round', lineJoin: 'round' },
+          }).addTo(lMapRef.current);
+          const line = L.geoJSON(result.geometry, {
+            style: { color: '#7c3aed', weight: 2.5, opacity: 0.75, lineCap: 'round', lineJoin: 'round' },
+            className: 'journey-route-line',
+          }).addTo(lMapRef.current);
+          newLayers.push(shadow, line);
+          drew = true;
+        } catch {}
+      }
+
+      if (!drew) {
+        const emoji = distKm > 400 ? '✈️' : '🚗';
+        const line = L.polyline([from, to], {
+          color: '#7c3aed', weight: 2.5, opacity: 0.65,
+          dashArray: '10 8', lineCap: 'round',
+        }).addTo(lMapRef.current);
+        const mid = [(from[0] + to[0]) / 2, (from[1] + to[1]) / 2];
+        const mIcon = L.divIcon({
+          html: `<span class="journey-mode-badge">${emoji}</span>`,
+          className: '', iconSize: [22, 22], iconAnchor: [11, 11],
+        });
+        const midM = L.marker(mid, { icon: mIcon, interactive: false }).addTo(lMapRef.current);
+        newLayers.push(line, midM);
+      }
+    }
+    journeyLayersRef.current = newLayers;
+  }, [coordsList]);
+
+  useEffect(() => {
+    if (coordsList.length >= 2 && lMapRef.current) drawJourney();
+  }, [coordsList, drawJourney]);
 
   const drawStraightFallback = useCallback((from, dest) => {
     const distKm = haversineKm(from, dest);
@@ -696,6 +774,19 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx, destination }) => 
               <span>{t.charAt(0).toUpperCase() + t.slice(1)}</span>
             </button>
           ))}
+          <button className="rmap-type-btn" onClick={handleViewAll} title="Fit all days in view">
+            <span>⊞</span><span>All Days</span>
+          </button>
+        </div>
+
+        <div className="rmap-nav-controls">
+          <button className="day-nav-btn" onClick={handlePrevDay} disabled={selectedDayIdx <= 0} title="Previous day">
+            ‹
+          </button>
+          <span className="day-nav-label">Day {(itinerary[selectedDayIdx]?.day) || selectedDayIdx + 1} / {itinerary.length}</span>
+          <button className="day-nav-btn" onClick={handleNextDay} disabled={selectedDayIdx >= coordsList.length - 1} title="Next day">
+            ›
+          </button>
         </div>
 
         {!isNavigating ? (
@@ -706,15 +797,34 @@ const RouteMap = ({ itinerary, activeDayIdx, setActiveDayIdx, destination }) => 
           >
             {gettingLocation
               ? <><span className="btn-spinner" /> Locating…</>
-              : <><Play size={13} fill="currentColor" /> Start Trip</>
+              : <><Play size={13} fill="currentColor" /> Navigate</>
             }
           </button>
         ) : (
           <button className="end-trip-btn" onClick={handleEndTrip}>
-            <X size={13} /> End Navigation
+            <X size={13} /> End
           </button>
         )}
       </div>
+
+      {coordsList.length > 1 && (
+        <div className="journey-progress-bar">
+          {coordsList.map((c, idx) => (
+            <div key={idx} className="journey-progress-item">
+              <button
+                className={`journey-progress-dot ${idx === selectedDayIdx ? 'active' : idx < selectedDayIdx ? 'done' : ''}`}
+                onClick={() => { setSelectedDayIdx(idx); setActiveDayIdx(idx); }}
+                title={`Day ${c.item.day}: ${c.item.location || c.item.title}`}
+              >
+                {idx < selectedDayIdx ? '✓' : c.item.day}
+              </button>
+              {idx < coordsList.length - 1 && (
+                <div className={`journey-progress-line ${idx < selectedDayIdx ? 'done' : ''}`} />
+              )}
+            </div>
+          ))}
+        </div>
+      )}
 
       {isNavigating && routeInfo && (
         <div className="route-info-bar">
