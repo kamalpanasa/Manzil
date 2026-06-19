@@ -49,7 +49,12 @@ const Signup = () => {
 
     if (signUpError) {
       setSubmitting(false);
-      setError(signUpError.message || 'Unable to create your account. Please try again.');
+      console.error("Signup error details:", signUpError);
+      let errMsg = signUpError.message;
+      if (errMsg === '{}' || !errMsg) {
+        errMsg = 'Unable to create account. Rate limit or configuration error in Supabase.';
+      }
+      setError(errMsg);
       return;
     }
 

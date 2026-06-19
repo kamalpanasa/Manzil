@@ -40,7 +40,12 @@ const Login = () => {
     setSubmitting(false);
 
     if (signInError) {
-      setError(signInError.message || 'Unable to log in. Please check your credentials.');
+      console.error("Login error details:", signInError);
+      let errMsg = signInError.message;
+      if (errMsg === '{}' || !errMsg) {
+        errMsg = 'Unable to log in. Rate limit or configuration error in Supabase.';
+      }
+      setError(errMsg);
       return;
     }
 
