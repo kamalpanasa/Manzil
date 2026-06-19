@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, status
 
 from app.models.schemas import ChatRequest, ChatResponse, ChatMessageOut
 from app.services.chat_service import send_message, get_history
@@ -26,11 +26,10 @@ async def history(user=Depends(get_current_user)):
 
 
 @router.post("/send", response_model=ChatResponse)
-async def send(http_request: Request, request: ChatRequest, user=Depends(get_current_user)):
+async def send(request: ChatRequest, user=Depends(get_current_user)):
     """Saves the user's message, gets a travel-aware Groq reply, saves and returns it."""
-    user_groq_key = http_request.headers.get('x-groq-key') or None
     try:
-        reply_row = send_message(user.id, request.message, groq_key=user_groq_key)
+        reply_row = send_message(user.id, request.message)
     except Exception as exc:
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY, detail=f"Groq request failed: {exc}"

@@ -345,69 +345,6 @@
   line-height: 1.4;
 }
 
-/* ── Responsive ─────────────────────────────────── */
-@media (max-width: 900px) {
-  .chat-page-container {
-    flex-direction: column;
-  }
-
-  .chat-sidebar {
-    width: 100%;
-    order: -1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    padding: 16px;
-  }
-
-  .sidebar-title {
-    grid-column: 1 / -1;
-  }
-
-  .ai-verification {
-    grid-column: 1 / -1;
-    margin-top: 0;
-  }
-}
-
-@media (max-width: 600px) {
-  .chat-sidebar {
-    grid-template-columns: 1fr;
-  }
-
-  .chat-header h2 {
-    font-size: 1.2rem;
-  }
-
-  .message-row {
-    max-width: 95%;
-  }
-
-  .text-bubble {
-    padding: 12px 14px;
-    font-size: 0.88rem;
-  }
-
-  .chat-input-area {
-    padding: 6px 10px;
-  }
-
-  .ai-plan-card {
-    max-width: 100%;
-    padding: 16px;
-  }
-
-  .quick-suggestions {
-    flex-direction: row;
-    flex-wrap: wrap;
-  }
-
-  .quick-suggestion-chip {
-    font-size: 0.78rem;
-    padding: 8px 12px;
-  }
-}
-
 /* --- Groq integration additions below --- */
 
 .chat-input-area input:disabled {

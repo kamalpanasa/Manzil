@@ -451,50 +451,6 @@
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* ── Responsive ─────────────────────────────────── */
-@media (max-width: 600px) {
-  .favorites-header {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .favorites-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .fav-tabs {
-    flex-wrap: wrap;
-  }
-
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .modal-content {
-    padding: 20px 16px;
-  }
-
-  .modal-actions {
-    flex-direction: column;
-  }
-
-  .modal-actions button {
-    width: 100%;
-  }
-
-  .empty-state-card {
-    padding: 40px 20px;
-  }
-
-  .empty-actions {
-    flex-direction: column;
-  }
-
-  .empty-actions button {
-    width: 100%;
-  }
-}
-
 /* Trip card variant */
 .trip-card-image {
   background: linear-gradient(135deg, rgba(99, 56, 255, 0.25) 0%, rgba(17, 10, 43, 0.95) 100%) !important;

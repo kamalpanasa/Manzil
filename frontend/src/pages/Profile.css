@@ -244,23 +244,3 @@
   font-size: 0.85rem;
   margin-bottom: 20px;
 }
-
-@media (max-width: 600px) {
-  .profile-left {
-    padding: 20px 16px;
-  }
-
-  .profile-right {
-    padding: 20px 16px;
-  }
-
-  .profile-header-title h2 {
-    font-size: 1.4rem;
-  }
-
-  .save-profile-btn {
-    width: 100%;
-    text-align: center;
-    justify-content: center;
-  }
-}
