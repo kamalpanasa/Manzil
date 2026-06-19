@@ -712,7 +712,6 @@ const Itinerary = () => {
                 setActiveDayIdx={setActiveDayIdx}
                 currencySymbol={currencySymbol}
                 convertFromINR={convertFromINR}
-                destination={trip?.destination || ''}
               />
             </div>
 
