@@ -57,6 +57,7 @@ const Itinerary = () => {
   const [saving, setSaving] = useState(false);
   const [savingFav, setSavingFav] = useState(false);
   const [favSaved, setFavSaved] = useState(false);
+  const [favError, setFavError] = useState('');
   const [savedActs, setSavedActs] = useState(new Set());
   const [savingActKey, setSavingActKey] = useState(null);
   const [mapOpen, setMapOpen] = useState(true);
@@ -121,6 +122,7 @@ const Itinerary = () => {
   const handleSaveToFavorites = async () => {
     if (!trip) return;
     setSavingFav(true);
+    setFavError('');
     try {
       await saveTrip({
         title: `${trip.destination} — ${trip.days}-Day Trip`,
@@ -133,6 +135,7 @@ const Itinerary = () => {
       setFavSaved(true);
     } catch (err) {
       console.error('Save to favorites failed:', err);
+      setFavError(err.message || 'Could not save. Make sure you are logged in and the favorites table exists in Supabase.');
     } finally {
       setSavingFav(false);
     }
@@ -335,9 +338,21 @@ const Itinerary = () => {
              favSaved ? <><Heart size={14} fill="currentColor" /> Saved!</> :
              <><Heart size={14} /> Save Trip</>}
           </button>
-          <button className="btn-outline ics-btn" onClick={handleExportCalendar}>
-            <Download size={14} /> Export
-          </button>
+          {favSaved && (
+            <button className="btn-outline ics-btn" onClick={() => navigate('/favorites')}>
+              View Favorites →
+            </button>
+          )}
+          {favError && !favSaved && (
+            <span style={{ fontSize: '12px', color: '#ff6b6b', maxWidth: '180px', lineHeight: '1.3' }}>
+              ⚠️ {favError}
+            </span>
+          )}
+          {!favSaved && (
+            <button className="btn-outline ics-btn" onClick={handleExportCalendar}>
+              <Download size={14} /> Export
+            </button>
+          )}
           <button className="btn-outline print-btn" onClick={() => window.print()}>Print</button>
         </div>
       </div>

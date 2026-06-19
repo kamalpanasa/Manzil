@@ -166,8 +166,10 @@ def generate_itinerary(
     days: int,
     budget: Optional[float],
     interests: List[str],
+    groq_key: Optional[str] = None,
 ) -> List[dict]:
-    completion = _client.chat.completions.create(
+    client = Groq(api_key=groq_key) if groq_key else _client
+    completion = client.chat.completions.create(
         model=settings.GROQ_MODEL,
         messages=[
             {"role": "system", "content": SYSTEM_PROMPT},

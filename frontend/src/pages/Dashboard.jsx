@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { MapPin, Calendar, DollarSign, Sparkles, Heart, Loader2, X, Plus } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateItinerary, listTrips } from '../lib/api';
+import { addFavorite } from '../lib/favorites';
 import { useAuth } from '../context/AuthContext';
 import { useCurrency, convertFromINR } from '../lib/currency';
 import { gsap } from 'gsap';
@@ -23,10 +24,18 @@ const TRAVEL_TYPES = [
 ];
 
 const TRENDING = [
-  { name: 'Goa', image: '/goa.png', type: 'Beach', rating: 4.8, price: '₹15k', days: '3-5' },
-  { name: 'Manali', image: '/manali.png', type: 'Mountains', rating: 4.9, price: '₹12k', days: '4-6' },
-  { name: 'Kerala', image: '/kerala.png', type: 'Nature', rating: 4.7, price: '₹18k', days: '5-7' },
-  { name: 'Jaipur', image: '/jaipur.png', type: 'Heritage', rating: 4.6, price: '₹10k', days: '3-4' },
+  { name: 'Goa', image: '/goa.png', type: 'Beach', rating: 4.8, price: '₹15k', days: '3-5', country: 'India' },
+  { name: 'Manali', image: '/manali.png', type: 'Mountains', rating: 4.9, price: '₹12k', days: '4-6', country: 'India' },
+  { name: 'Kerala', image: '/kerala.png', type: 'Nature', rating: 4.7, price: '₹18k', days: '5-7', country: 'India' },
+  { name: 'Jaipur', image: '/jaipur.png', type: 'Heritage', rating: 4.6, price: '₹10k', days: '3-4', country: 'India' },
+  { name: 'Bali', image: '/bali.png', type: 'Beach', rating: 4.9, price: '₹45k', days: '5-7', country: 'Indonesia' },
+  { name: 'Bangkok', image: '/bangkok.png', type: 'City', rating: 4.7, price: '₹30k', days: '4-6', country: 'Thailand' },
+  { name: 'Dubai', image: '/dubai.png', type: 'Luxury', rating: 4.8, price: '₹80k', days: '4-5', country: 'UAE' },
+  { name: 'Paris', image: '/paris.png', type: 'Romance', rating: 4.9, price: '₹1.2L', days: '5-7', country: 'France' },
+  { name: 'Tokyo', image: '/tokyo.png', type: 'Culture', rating: 4.9, price: '₹90k', days: '7-10', country: 'Japan' },
+  { name: 'Singapore', image: '/singapore.png', type: 'City', rating: 4.8, price: '₹55k', days: '3-5', country: 'Singapore' },
+  { name: 'Agra', image: '/agra.png', type: 'Heritage', rating: 4.5, price: '₹8k', days: '1-2', country: 'India' },
+  { name: 'Shimla', image: '/shimla.png', type: 'Mountains', rating: 4.6, price: '₹10k', days: '3-4', country: 'India' },
 ];
 
 const Dashboard = () => {
@@ -56,6 +65,8 @@ const Dashboard = () => {
   const [travelType, setTravelType] = useState('Couple');
   const [customInterest, setCustomInterest] = useState('');
   const [showCustomInput, setShowCustomInput] = useState(false);
+  const [showAllTrending, setShowAllTrending] = useState(false);
+  const [savedTrending, setSavedTrending] = useState(new Set());
 
   useEffect(() => {
     if (location.state?.prefilledDestination) {
@@ -138,6 +149,25 @@ const Dashboard = () => {
 
   const removeInterest = (interest) => {
     setInterests(prev => prev.filter(i => i !== interest));
+  };
+
+  const handleFavoriteTrending = async (e, dest) => {
+    e.stopPropagation();
+    if (savedTrending.has(dest.name)) return;
+    try {
+      await addFavorite({
+        type: 'destination',
+        title: dest.name,
+        location: `${dest.name}, ${dest.country}`,
+        image_url: dest.type === 'Beach' ? '🏖️' : dest.type === 'Mountains' ? '⛰️' : dest.type === 'Heritage' ? '🏛️' : dest.type === 'Nature' ? '🌿' : dest.type === 'Luxury' ? '💎' : dest.type === 'Romance' ? '🗼' : dest.type === 'Culture' ? '🎌' : '📍',
+        rating: dest.rating,
+        price: null,
+        description: `${dest.days} day trip · ${dest.type}`,
+      });
+      setSavedTrending(prev => new Set([...prev, dest.name]));
+    } catch (err) {
+      console.error('Could not save to favorites:', err);
+    }
   };
 
   const handlePlanTrip = async (e, overrideDest = null, overrideDays = null) => {
@@ -349,10 +379,15 @@ const Dashboard = () => {
           <div className="trending-destinations animate-fade-in" style={{ animationDelay: '0.1s' }}>
             <div className="section-header">
               <h3><MapPin size={20} color="var(--primary)" /> Trending Destinations</h3>
-              <button className="btn-outline view-all">View All</button>
+              <button
+                className="btn-outline view-all"
+                onClick={() => setShowAllTrending(prev => !prev)}
+              >
+                {showAllTrending ? 'Show Less' : 'View All'}
+              </button>
             </div>
             <div className="suggestion-cards" ref={suggestionsRef}>
-              {TRENDING.map(dest => (
+              {(showAllTrending ? TRENDING : TRENDING.slice(0, 4)).map(dest => (
                 <div
                   key={dest.name}
                   className="suggestion-card glass-card clickable-suggestion"
@@ -366,12 +401,18 @@ const Dashboard = () => {
                     className="card-img-placeholder"
                     style={{ backgroundImage: `url(${dest.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
                   >
-                    <Heart className="heart-icon" size={18} />
+                    <Heart
+                      className="heart-icon"
+                      size={18}
+                      fill={savedTrending.has(dest.name) ? 'currentColor' : 'none'}
+                      style={{ color: savedTrending.has(dest.name) ? 'var(--secondary)' : undefined, cursor: 'pointer' }}
+                      onClick={(e) => handleFavoriteTrending(e, dest)}
+                    />
                     <div className="badge type-badge">{dest.type}</div>
                   </div>
                   <div className="card-info">
                     <h4>{dest.name}</h4>
-                    <p className="meta">India • {dest.days} days</p>
+                    <p className="meta">{dest.country} • {dest.days} days</p>
                     <div className="card-footer">
                       <span className="rating">★ {dest.rating}</span>
                       <span className="price">{dest.price} <span>/person</span></span>

@@ -1,13 +1,16 @@
 import { supabase } from './supabaseClient';
 
 export async function listFavorites() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return [];
+
   const { data, error } = await supabase
     .from('favorites')
     .select('*')
+    .eq('user_id', user.id)
     .order('created_at', { ascending: false });
 
   if (error) {
-    // Return empty array if table doesn't exist yet to prevent hard crashes
     if (error.code === 'P0001' || error.message?.includes('does not exist')) {
       console.warn('favorites table does not exist yet. Run SQL schema commands in Supabase.');
       return [];

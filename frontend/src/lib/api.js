@@ -2,7 +2,7 @@ import { supabase } from './supabaseClient';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '';
 
-async function request(path, { method = 'GET', body } = {}) {
+async function request(path, { method = 'GET', body, extraHeaders = {} } = {}) {
   const { data: { session } } = await supabase.auth.getSession();
 
   if (!session) {
@@ -14,6 +14,7 @@ async function request(path, { method = 'GET', body } = {}) {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${session.access_token}`,
+      ...extraHeaders,
     },
     body: body ? JSON.stringify(body) : undefined,
   });
@@ -33,9 +34,14 @@ async function request(path, { method = 'GET', body } = {}) {
 }
 
 export function generateItinerary({ source, destination, days, budget, interests }) {
+  const extraHeaders = {};
+  const groqKey = localStorage.getItem('manzil_groq_key');
+  if (groqKey) extraHeaders['X-Groq-Key'] = groqKey;
+
   return request('/api/itinerary/generate', {
     method: 'POST',
     body: { source, destination, days, budget, interests },
+    extraHeaders,
   });
 }
 

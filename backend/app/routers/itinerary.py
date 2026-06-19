@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 
 from app.models.schemas import ItineraryRequest, ItineraryResponse, ItineraryDay, ItineraryActivity
 from app.services.groq_service import generate_itinerary
@@ -41,7 +41,8 @@ def _build_day(d: dict) -> ItineraryDay:
 
 
 @router.post("/generate", response_model=ItineraryResponse)
-async def generate(request: ItineraryRequest, user=Depends(get_current_user)):
+async def generate(http_request: Request, request: ItineraryRequest, user=Depends(get_current_user)):
+    user_groq_key = http_request.headers.get('x-groq-key') or None
     try:
         raw_days = generate_itinerary(
             source=request.source,
@@ -49,6 +50,7 @@ async def generate(request: ItineraryRequest, user=Depends(get_current_user)):
             days=request.days,
             budget=request.budget,
             interests=request.interests,
+            groq_key=user_groq_key,
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(exc))
